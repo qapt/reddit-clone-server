@@ -1,0 +1,105 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DB_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id           String         @id @default(uuid())
+    username     String         @unique
+    password     String
+    email        String         @unique
+    name         String
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @default(now()) @updatedAt
+    Subscription Subscription[]
+    posts        Post[]
+    SavedPost    SavedPost[]
+
+    Upvote   Upvote[]
+    Downvote Downvote[]
+    comments Comment[]
+}
+
+model Subreddit {
+    id           String         @id @default(uuid())
+    name         String         @unique
+    title        String
+    color        String         @default("blue.400")
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @default(now()) @updatedAt
+    Subscription Subscription[]
+    posts        Post[]
+}
+
+model Subscription {
+    id          Int       @id @default(autoincrement())
+    userId      String
+    user        User      @relation(fields: [userId], references: [id])
+    subredditId String
+    subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+    createdAt   DateTime  @default(now())
+}
+
+model Post {
+    id          String      @id @default(uuid())
+    title       String
+    content     String
+    tags        String[]
+    subredditId String
+    subreddit   Subreddit   @relation(fields: [subredditId], references: [id])
+    userId      String
+    user        User        @relation(fields: [userId], references: [id])
+    createdAt   DateTime    @default(now())
+    SavedPost   SavedPost[]
+    Upvote      Upvote[]
+    Downvote    Downvote[]
+    comments    Comment[]
+}
+
+model Comment {
+    id        String   @id @default(uuid())
+    content   String
+    createdAt DateTime @default(now())
+    postId    String?
+    post      Post?    @relation(fields: [postId], references: [id])
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+
+    comments     Comment[] @relation("CommentToComment")
+    Comment      Comment?  @relation("CommentToComment", fields: [subCommentId], references: [id])
+    subCommentId String?
+}
+
+model SavedPost {
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    postId    String
+    post      Post     @relation(fields: [postId], references: [id])
+    createdAt DateTime @default(now())
+
+    @@id([userId, postId])
+}
+
+model Upvote {
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    postId    String
+    post      Post     @relation(fields: [postId], references: [id])
+    createdAt DateTime @default(now())
+
+    @@id([userId, postId])
+}
+
+model Downvote {
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    postId    String
+    post      Post     @relation(fields: [postId], references: [id])
+    createdAt DateTime @default(now())
+
+    @@id([userId, postId])
+}
